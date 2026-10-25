@@ -76,11 +76,14 @@ is rate limited it throws a `GeminiError` with `rateLimited` and `retryAfter`.
 
 ## Installing
 
-Apps depend on a tagged release straight from GitHub:
+Apps depend on a tagged release's tarball, straight from GitHub:
 
 ```json
-"shop-teacher": "github:zgyorkei/shop-teacher#v1.0.0"
+"shop-teacher": "https://github.com/zgyorkei/shop-teacher/archive/refs/tags/v1.0.0.tar.gz"
 ```
+
+The tarball needs no git and no SSH key (npm's `github:` shorthand tries SSH first, which
+fails on build servers such as Vercel), and the lockfile pins its checksum.
 
 `dist/` is committed, so installing needs no build step. After changing `src/`,
 run `npm run check` (typecheck, tests, build), commit `dist/` with the change,
