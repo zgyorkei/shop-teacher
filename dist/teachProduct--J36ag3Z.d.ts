@@ -152,4 +152,4 @@ declare function buildProductRetryPrompt(basePrompt: string, recipe: unknown, re
 declare function teachProductPage(shop: string, url: string, itemName: string, deps: TeachProductDeps): Promise<TeachProductResult>;
 
 export { buildProductRetryPrompt as g, buildProductTeachPrompt as h, isDecimalSeparator as i, parseProductRecipe as j, parseSearchRecipe as k, titleMatchScore as l, parseDisplayPrice as p, rankCards as r, shopHost as s, teachProductPage as t };
-export type { DecimalSeparator as D, PageCapture as P, RecipeReading as R, SearchRecipe as S, TeachProductDeps as T, ProductRecipe as a, ScrapedCard as b, RecipeTestResult as c, PickedCard as d, ScrapeCookie as e, TeachProductResult as f };
+export type { DecimalSeparator as D, PageCapture as P, RecipeTestResult as R, SearchRecipe as S, TeachProductDeps as T, PickedCard as a, ProductRecipe as b, RecipeReading as c, ScrapeCookie as d, ScrapedCard as e, TeachProductResult as f };

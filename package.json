@@ -1,7 +1,7 @@
 {
   "name": "shop-teacher",
-  "version": "1.0.0",
-  "description": "Teach apps to read shop prices with Gemini-written recipes, with one Gemini API key shared by every app on the machine.",
+  "version": "1.1.0",
+  "description": "Teach apps to read shop prices, and optionally product sizes, with Gemini-written recipes, with one Gemini API key shared by every app on the machine.",
   "author": "zgyorkei",
   "license": "MIT",
   "repository": {
@@ -22,6 +22,10 @@
     "./browser": {
       "import": { "types": "./dist/browser/index.d.ts", "default": "./dist/browser/index.js" },
       "require": { "types": "./dist/browser/index.d.cts", "default": "./dist/browser/index.cjs" }
+    },
+    "./measure": {
+      "import": { "types": "./dist/measure/index.d.ts", "default": "./dist/measure/index.js" },
+      "require": { "types": "./dist/measure/index.d.cts", "default": "./dist/measure/index.cjs" }
     },
     "./package.json": "./package.json"
   },

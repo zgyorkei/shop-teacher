@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup';
 // committed build means they need no toolchain to do it.
 export default defineConfig([
   {
-    entry: { index: 'src/index.ts', 'gemini/index': 'src/gemini/index.ts', 'browser/index': 'src/browser/index.ts' },
+    entry: { index: 'src/index.ts', 'gemini/index': 'src/gemini/index.ts', 'browser/index': 'src/browser/index.ts', 'measure/index': 'src/measure/index.ts' },
     format: ['esm', 'cjs'],
     dts: true,
     // import.meta.url (the key store's createRequire) in the CommonJS build.

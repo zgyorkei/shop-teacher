@@ -23,12 +23,40 @@ model into writing something that runs on your computer.
 4. The app saves the recipe. From then on it reads prices with the recipe
    alone: no AI.
 
-There are two kinds of recipe:
+There are two kinds of price recipe:
 
 | Kind | Reads | Used by |
 | --- | --- | --- |
 | Product page (`ProductRecipe`) | the price on one product's own page | BrickBudget wishlists |
 | Search page (`SearchRecipe`) | a shop's search results for a LEGO set number, picking the set's own listing | Brick Tracker |
+
+### Measure recipes (opt-in)
+
+An app that also needs a product's size, as BLOK.AI does, can teach a shop
+where its product pages give it, from `shop-teacher/measure`. Nothing else in
+the package depends on it, and an app that never imports it never loads it:
+the price recipes, their teaching and their prompts are as they were.
+
+A `MeasureRecipe` holds a selector for the element giving the overall size
+("140 x 46 x 84 cm", a specification row or table), or one selector each for
+the width, depth and height; the unit of numbers written without one; and the
+buttons to click first, a cookie banner and a collapsed specification tab. It
+is taught like a product recipe, and kept only when, run on the live page, it
+finds at least two of the three measures. `readMeasureRecipe` returns the
+texts it read with the sizes `parseSizes` makes of them, in metres, so an app
+can judge the texts with its own rules.
+
+```ts
+import { shopHost } from 'shop-teacher';
+import { askGemini } from 'shop-teacher/gemini';
+import { captureForSizes, readMeasureRecipe, teachMeasurePage } from 'shop-teacher/measure';
+
+const result = await teachMeasurePage(shopHost(url)!, url, 'White sideboard', {
+  capture: (u) => withPage(u, (page) => captureForSizes(page)),
+  test: (u, recipe) => withPage(u, (page) => readMeasureRecipe(page, recipe)),
+  ask: (prompt) => askGemini(prompt),
+});
+```
 
 ## The shared Gemini key
 
@@ -53,6 +81,7 @@ process to call Gemini, and can only learn whether a key is set.
 | `shop-teacher` | anywhere (browser-safe) | recipes, `parseDisplayPrice`, `teachProductPage`, `teachSearchPage`, prompts |
 | `shop-teacher/gemini` | Node / Electron main | `askGemini`, `getGeminiKey`, `setGeminiKey`, `clearGeminiKey`, `geminiKeyStatus`, `adoptGeminiKey` |
 | `shop-teacher/browser` | Node, with the app's Playwright page | `capturePage`, `readProductRecipe`, `readSearchCards`, `readPagePrice`, `acceptConsent`, `isBlockedPage` |
+| `shop-teacher/measure` | Node, with the app's Playwright page (opt-in) | `teachMeasurePage`, `readMeasureRecipe`, `captureForSizes`, `parseMeasureRecipe`, `parseSizes` |
 
 Each app keeps its own browser, profile and page queue, and hands these
 helpers an open page.
