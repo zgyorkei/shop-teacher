@@ -61,6 +61,20 @@ function shopHost(url) {
 }
 
 // src/searchRecipe.ts
+var PLACEHOLDER_IMAGE = /(spacer|blank|pixel|placeholder|transparent|loading|grey|gray)\.(gif|png|svg|jpe?g)(\?|$)/i;
+function pickCardImage(raw, baseUrl) {
+  if (!raw) return null;
+  const firstSrcset = raw.srcset?.split(",")[0]?.trim().split(/\s+/)[0] ?? null;
+  for (const candidate of [raw.current, raw.src, raw.dataSrc, firstSrcset]) {
+    if (!candidate || /^(data|blob):/i.test(candidate) || PLACEHOLDER_IMAGE.test(candidate)) continue;
+    try {
+      const url = new URL(candidate, baseUrl);
+      if (url.protocol === "https:" || url.protocol === "http:") return url.toString();
+    } catch {
+    }
+  }
+  return null;
+}
 function parseSearchRecipe(raw) {
   if (!raw || typeof raw !== "object") return null;
   const r = raw;
@@ -297,6 +311,7 @@ export {
   parseDisplayPrice,
   parseProductRecipe,
   parseSearchRecipe,
+  pickCardImage,
   rankCards,
   sampleUrl,
   shopHost,

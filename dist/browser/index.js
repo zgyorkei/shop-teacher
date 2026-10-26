@@ -15,6 +15,22 @@ function parseDisplayPrice(text, decimalSeparator = "auto") {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
+// src/searchRecipe.ts
+var PLACEHOLDER_IMAGE = /(spacer|blank|pixel|placeholder|transparent|loading|grey|gray)\.(gif|png|svg|jpe?g)(\?|$)/i;
+function pickCardImage(raw, baseUrl) {
+  if (!raw) return null;
+  const firstSrcset = raw.srcset?.split(",")[0]?.trim().split(/\s+/)[0] ?? null;
+  for (const candidate of [raw.current, raw.src, raw.dataSrc, firstSrcset]) {
+    if (!candidate || /^(data|blob):/i.test(candidate) || PLACEHOLDER_IMAGE.test(candidate)) continue;
+    try {
+      const url = new URL(candidate, baseUrl);
+      if (url.protocol === "https:" || url.protocol === "http:") return url.toString();
+    } catch {
+    }
+  }
+  return null;
+}
+
 // src/browser/index.ts
 var GENERIC_CONSENT = '#onetrust-accept-btn-handler, #sp-cc-accept, #didomi-notice-agree-button, button#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll, .cmpboxbtnyes, [data-testid="uc-accept-all-button"]';
 var CAPTURE_MAX_CHARS = 11e4;
@@ -95,16 +111,28 @@ async function readProductRecipe(page, recipe) {
   }
   return reading;
 }
-function readSearchCards(page, recipe) {
-  return page.evaluate(
-    (sel) => Array.from(document.querySelectorAll(sel.result)).slice(0, 60).map((n) => ({
-      // Every match is joined: some layouts split brand and title.
-      title: Array.from(n.querySelectorAll(sel.title)).map((el) => el.textContent || "").join(" ").replace(/\s+/g, " ").trim(),
-      priceText: n.querySelector(sel.price)?.textContent?.trim() || null,
-      href: sel.link ? n.querySelector(sel.link)?.getAttribute("href") || null : null
-    })),
+async function readSearchCards(page, recipe) {
+  const cards = await page.evaluate(
+    (sel) => Array.from(document.querySelectorAll(sel.result)).slice(0, 60).map((n) => {
+      const img = n.querySelector("img");
+      return {
+        // Every match is joined: some layouts split brand and title.
+        title: Array.from(n.querySelectorAll(sel.title)).map((el) => el.textContent || "").join(" ").replace(/\s+/g, " ").trim(),
+        priceText: n.querySelector(sel.price)?.textContent?.trim() || null,
+        href: sel.link ? n.querySelector(sel.link)?.getAttribute("href") || null : null,
+        // Raw attributes only; the URL is picked outside the page.
+        rawImage: img ? {
+          current: img.currentSrc || null,
+          src: img.getAttribute("src"),
+          dataSrc: img.getAttribute("data-src") || img.getAttribute("data-lazy-src") || img.getAttribute("data-original"),
+          srcset: img.getAttribute("srcset") || img.getAttribute("data-srcset")
+        } : null
+      };
+    }),
     { result: recipe.resultSelector, title: recipe.titleSelector, price: recipe.priceSelector, link: recipe.linkSelector ?? null }
   );
+  const base = page.url();
+  return cards.map(({ rawImage, ...card }) => ({ ...card, image: pickCardImage(rawImage, base) }));
 }
 async function readPagePrice(page, selector, decimalSeparator) {
   const texts = await page.evaluate(

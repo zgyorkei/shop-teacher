@@ -64,6 +64,12 @@ export interface RecipeTestResult {
   titles: string[];
   /** The page was a bot check or an error page. */
   blocked: boolean;
+  /**
+   * The picked card's title and image as read, so an app can fall back on
+   * the shop's listing when it knows nothing else about the product.
+   */
+  title?: string | null;
+  image?: string | null;
 }
 
 /** One product card as read off the page, before any matching. */
@@ -71,6 +77,40 @@ export interface ScrapedCard {
   title: string;
   priceText: string | null;
   href: string | null;
+  /** The card's product image as an absolute URL, when it shows one. */
+  image?: string | null;
+}
+
+/** Image attributes of a card's first <img>, as read in the page. */
+export interface RawCardImage {
+  current?: string | null;
+  src?: string | null;
+  dataSrc?: string | null;
+  srcset?: string | null;
+}
+
+// Lazy-loading stand-ins that are not the product.
+const PLACEHOLDER_IMAGE = /(spacer|blank|pixel|placeholder|transparent|loading|grey|gray)\.(gif|png|svg|jpe?g)(\?|$)/i;
+
+/**
+ * Picks a usable absolute image URL from a card's image attributes: the one
+ * the browser chose (currentSrc) first, then src, the usual lazy-load
+ * attributes, and the first srcset entry. Data/blob URIs and lazy-load
+ * placeholders are skipped. Null when nothing qualifies.
+ */
+export function pickCardImage(raw: RawCardImage | null | undefined, baseUrl: string): string | null {
+  if (!raw) return null;
+  const firstSrcset = raw.srcset?.split(',')[0]?.trim().split(/\s+/)[0] ?? null;
+  for (const candidate of [raw.current, raw.src, raw.dataSrc, firstSrcset]) {
+    if (!candidate || /^(data|blob):/i.test(candidate) || PLACEHOLDER_IMAGE.test(candidate)) continue;
+    try {
+      const url = new URL(candidate, baseUrl);
+      if (url.protocol === 'https:' || url.protocol === 'http:') return url.toString();
+    } catch {
+      /* not a URL */
+    }
+  }
+  return null;
 }
 
 /**

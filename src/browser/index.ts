@@ -9,7 +9,7 @@
 
 import { parseDisplayPrice, type DecimalSeparator } from '../price.js';
 import type { ProductRecipe, RecipeReading } from '../productRecipe.js';
-import type { ScrapedCard, SearchRecipe } from '../searchRecipe.js';
+import { pickCardImage, type ScrapedCard, type SearchRecipe } from '../searchRecipe.js';
 import type { PageCapture } from '../teachProduct.js';
 
 /** The parts of a Playwright Page these helpers use. */
@@ -143,23 +143,37 @@ export async function readProductRecipe(page: PageLike, recipe: ProductRecipe): 
  * The product cards of a search page as the recipe reads them (at most 60).
  * Throws when the browser rejects one of the recipe's selectors.
  */
-export function readSearchCards(page: PageLike, recipe: SearchRecipe): Promise<ScrapedCard[]> {
-  return page.evaluate(
+export async function readSearchCards(page: PageLike, recipe: SearchRecipe): Promise<ScrapedCard[]> {
+  const cards = await page.evaluate(
     (sel) =>
       Array.from(document.querySelectorAll(sel.result))
         .slice(0, 60)
-        .map((n) => ({
-          // Every match is joined: some layouts split brand and title.
-          title: Array.from(n.querySelectorAll(sel.title))
-            .map((el) => el.textContent || '')
-            .join(' ')
-            .replace(/\s+/g, ' ')
-            .trim(),
-          priceText: n.querySelector(sel.price)?.textContent?.trim() || null,
-          href: sel.link ? n.querySelector(sel.link)?.getAttribute('href') || null : null,
-        })),
+        .map((n) => {
+          const img = n.querySelector('img');
+          return {
+            // Every match is joined: some layouts split brand and title.
+            title: Array.from(n.querySelectorAll(sel.title))
+              .map((el) => el.textContent || '')
+              .join(' ')
+              .replace(/\s+/g, ' ')
+              .trim(),
+            priceText: n.querySelector(sel.price)?.textContent?.trim() || null,
+            href: sel.link ? n.querySelector(sel.link)?.getAttribute('href') || null : null,
+            // Raw attributes only; the URL is picked outside the page.
+            rawImage: img
+              ? {
+                  current: img.currentSrc || null,
+                  src: img.getAttribute('src'),
+                  dataSrc: img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || img.getAttribute('data-original'),
+                  srcset: img.getAttribute('srcset') || img.getAttribute('data-srcset'),
+                }
+              : null,
+          };
+        }),
     { result: recipe.resultSelector, title: recipe.titleSelector, price: recipe.priceSelector, link: recipe.linkSelector ?? null }
   );
+  const base = page.url();
+  return cards.map(({ rawImage, ...card }) => ({ ...card, image: pickCardImage(rawImage, base) }));
 }
 
 /**

@@ -78,10 +78,16 @@ process to call Gemini, and can only learn whether a key is set.
 
 | Import | Runs in | Holds |
 | --- | --- | --- |
-| `shop-teacher` | anywhere (browser-safe) | recipes, `parseDisplayPrice`, `teachProductPage`, `teachSearchPage`, prompts |
+| `shop-teacher` | anywhere (browser-safe) | recipes, `parseDisplayPrice`, `pickCardImage`, `teachProductPage`, `teachSearchPage`, prompts |
 | `shop-teacher/gemini` | Node / Electron main | `askGemini`, `getGeminiKey`, `setGeminiKey`, `clearGeminiKey`, `geminiKeyStatus`, `adoptGeminiKey` |
 | `shop-teacher/browser` | Node, with the app's Playwright page | `capturePage`, `readProductRecipe`, `readSearchCards`, `readPagePrice`, `acceptConsent`, `isBlockedPage` |
 | `shop-teacher/measure` | Node, with the app's Playwright page (opt-in) | `teachMeasurePage`, `readMeasureRecipe`, `captureForSizes`, `parseMeasureRecipe`, `parseSizes` |
+
+`readSearchCards` also returns each card's product image (`image`, an
+absolute URL picked by `pickCardImage` from the card's first `<img>`, skipping
+lazy-load placeholders), and `RecipeTestResult` has optional `title` and
+`image` fields for the picked card, so an app can name and picture a product
+from the shop's listing when it has nothing better. Both are additive (1.2.0).
 
 Each app keeps its own browser, profile and page queue, and hands these
 helpers an open page.

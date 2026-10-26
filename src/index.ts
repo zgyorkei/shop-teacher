@@ -10,11 +10,13 @@ export {
   parseSearchRecipe,
   titleMatchScore,
   rankCards,
+  pickCardImage,
   type SearchRecipe,
   type ScrapeCookie,
   type RecipeTestResult,
   type ScrapedCard,
   type PickedCard,
+  type RawCardImage,
 } from './searchRecipe.js';
 export {
   teachProductPage,

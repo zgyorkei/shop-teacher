@@ -88,13 +88,35 @@ interface RecipeTestResult {
     titles: string[];
     /** The page was a bot check or an error page. */
     blocked: boolean;
+    /**
+     * The picked card's title and image as read, so an app can fall back on
+     * the shop's listing when it knows nothing else about the product.
+     */
+    title?: string | null;
+    image?: string | null;
 }
 /** One product card as read off the page, before any matching. */
 interface ScrapedCard {
     title: string;
     priceText: string | null;
     href: string | null;
+    /** The card's product image as an absolute URL, when it shows one. */
+    image?: string | null;
 }
+/** Image attributes of a card's first <img>, as read in the page. */
+interface RawCardImage {
+    current?: string | null;
+    src?: string | null;
+    dataSrc?: string | null;
+    srcset?: string | null;
+}
+/**
+ * Picks a usable absolute image URL from a card's image attributes: the one
+ * the browser chose (currentSrc) first, then src, the usual lazy-load
+ * attributes, and the first srcset entry. Data/blob URIs and lazy-load
+ * placeholders are skipped. Null when nothing qualifies.
+ */
+declare function pickCardImage(raw: RawCardImage | null | undefined, baseUrl: string): string | null;
 /**
  * Validates an untrusted recipe (from Gemini or a database) and returns a clean
  * copy with only known fields, or null. Regex patterns are compiled here so a
@@ -151,5 +173,5 @@ declare function buildProductRetryPrompt(basePrompt: string, recipe: unknown, re
  */
 declare function teachProductPage(shop: string, url: string, itemName: string, deps: TeachProductDeps): Promise<TeachProductResult>;
 
-export { buildProductRetryPrompt as g, buildProductTeachPrompt as h, isDecimalSeparator as i, parseProductRecipe as j, parseSearchRecipe as k, titleMatchScore as l, parseDisplayPrice as p, rankCards as r, shopHost as s, teachProductPage as t };
-export type { DecimalSeparator as D, PageCapture as P, RecipeTestResult as R, SearchRecipe as S, TeachProductDeps as T, PickedCard as a, ProductRecipe as b, RecipeReading as c, ScrapeCookie as d, ScrapedCard as e, TeachProductResult as f };
+export { buildProductRetryPrompt as h, buildProductTeachPrompt as i, isDecimalSeparator as j, parseProductRecipe as k, parseSearchRecipe as l, pickCardImage as m, titleMatchScore as n, parseDisplayPrice as p, rankCards as r, shopHost as s, teachProductPage as t };
+export type { DecimalSeparator as D, PageCapture as P, RecipeTestResult as R, SearchRecipe as S, TeachProductDeps as T, PickedCard as a, ProductRecipe as b, RawCardImage as c, RecipeReading as d, ScrapeCookie as e, ScrapedCard as f, TeachProductResult as g };

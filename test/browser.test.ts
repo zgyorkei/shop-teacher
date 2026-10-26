@@ -1,7 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { excerptAround, readPagePrice, readProductRecipe, type PageLike } from '../src/browser/index.ts';
-import { parseProductRecipe } from '../src/index.ts';
+import { excerptAround, readPagePrice, readProductRecipe, readSearchCards, type PageLike } from '../src/browser/index.ts';
+import { parseProductRecipe, parseSearchRecipe, pickCardImage } from '../src/index.ts';
+
+test('a card image prefers what the browser chose and skips placeholders', () => {
+  const base = 'https://www.amazon.de/s?k=lego';
+  assert.equal(
+    pickCardImage({ current: 'https://m.media-amazon.com/I/a._UL480_.jpg', src: 'https://m.media-amazon.com/I/a._UL320_.jpg' }, base),
+    'https://m.media-amazon.com/I/a._UL480_.jpg'
+  );
+  assert.equal(pickCardImage({ current: '', src: 'data:image/gif;base64,R0lGOD', dataSrc: '/img/real.jpg' }, base), 'https://www.amazon.de/img/real.jpg');
+  assert.equal(pickCardImage({ src: '/static/blank.gif', srcset: 'https://x.test/big.jpg 2x, https://x.test/small.jpg 1x' }, base), 'https://x.test/big.jpg');
+  assert.equal(pickCardImage({ src: 'javascript:alert(1)' }, base), null);
+  assert.equal(pickCardImage(null, base), null);
+});
 
 /**
  * A stand-in page: evaluate() answers with `texts` for the price selector and
@@ -38,6 +50,24 @@ test('a product recipe reports bot checks and rejected selectors instead of thro
 test('a product page price skips placeholders', async () => {
   assert.equal(await readPagePrice(fakePage({ texts: ['', '45,89 €'] }), '.p', 'auto'), 45.89);
   assert.equal(await readPagePrice(fakePage({ texts: ['n/a'] }), '.p', 'auto'), null);
+});
+
+test('search cards carry their image as an absolute URL', async () => {
+  const page = {
+    ...fakePage({}),
+    url: () => 'https://www.arukereso.hu/CategorySearch.php?st=633412',
+    async evaluate() {
+      return [
+        { title: 'LEGO 633412 (633412)', priceText: '9 990 Ft', href: '/p/1', rawImage: { current: '', src: '//p1.akcdn.net/thumb/1.jpg' } },
+        { title: 'No image', priceText: null, href: null, rawImage: null },
+      ];
+    },
+  } as unknown as PageLike;
+  const cards = await readSearchCards(page, parseSearchRecipe({ resultSelector: 'div', titleSelector: 'h2', priceSelector: '.p', decimalSeparator: ',' })!);
+  assert.deepEqual(cards, [
+    { title: 'LEGO 633412 (633412)', priceText: '9 990 Ft', href: '/p/1', image: 'https://p1.akcdn.net/thumb/1.jpg' },
+    { title: 'No image', priceText: null, href: null, image: null },
+  ]);
 });
 
 test('captures are cut around the focus, within the limit', () => {

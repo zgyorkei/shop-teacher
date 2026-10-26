@@ -1,5 +1,5 @@
-import { R as RecipeTestResult, P as PageCapture, S as SearchRecipe } from './teachProduct--J36ag3Z.js';
-export { D as DecimalSeparator, a as PickedCard, b as ProductRecipe, c as RecipeReading, d as ScrapeCookie, e as ScrapedCard, T as TeachProductDeps, f as TeachProductResult, g as buildProductRetryPrompt, h as buildProductTeachPrompt, i as isDecimalSeparator, p as parseDisplayPrice, j as parseProductRecipe, k as parseSearchRecipe, r as rankCards, s as shopHost, t as teachProductPage, l as titleMatchScore } from './teachProduct--J36ag3Z.js';
+import { R as RecipeTestResult, P as PageCapture, S as SearchRecipe } from './teachProduct-Zwh8C1ie.js';
+export { D as DecimalSeparator, a as PickedCard, b as ProductRecipe, c as RawCardImage, d as RecipeReading, e as ScrapeCookie, f as ScrapedCard, T as TeachProductDeps, g as TeachProductResult, h as buildProductRetryPrompt, i as buildProductTeachPrompt, j as isDecimalSeparator, p as parseDisplayPrice, k as parseProductRecipe, l as parseSearchRecipe, m as pickCardImage, r as rankCards, s as shopHost, t as teachProductPage, n as titleMatchScore } from './teachProduct-Zwh8C1ie.js';
 
 /** The first JSON object in a model response (tolerates code fences and chatter), or null. */
 declare function extractJsonObject(text: string): unknown;
